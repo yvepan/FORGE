@@ -1,198 +1,62 @@
 # FORGE
 
-Code release for the FORGE attack and PRISM evaluation framework.
-The experiment-specific code lives in `forge/`, `prism/`, `defense/`, `experiments/`, and `tools/`.
-GPT Researcher is vendored directly so the artifact reproduces without a conflicting upstream install.
+Partial anonymous source release for *From Poisoned Evidence to Research Drift in Deep Research Agents*. Retained code covers three framework adapters, frozen run configuration, QP/KE/RQA defenses and aggregation of externally finalized E/P/A/T annotations.
 
----
-
-## Repository Layout
-
-| Path | Description |
-|---|---|
-| `cli.py` | Command-line entry point for deep-research report generation |
-| `gpt_researcher/` | Vendored GPT Researcher runtime (v0.14.5, modified — see `UPSTREAM.md`) |
-| `backend/` | Report writers and server utilities used by `cli.py` |
-| `forge/` | FORGE scaffolds: chain metadata helpers and Appendix B prompt templates (Steps 1, 2a, 2b) |
-| `prism/` | PRISM taxonomy, weighted scoring, and the full atomic ASR evaluation pipeline |
-| `defense/` | Root Query Anchoring (RQA) defense helper |
-| `experiments/` | Stable entry points for depth-sweep and network-condition runs |
-| `tools/` | Document generation, ASR scoring, graph checks, and batch experiment helpers |
-| `graphcheck/` | Graph ASR audit: reads atomic ASR pipeline results and graph files to produce summary tables and statistics |
-| `data/` | Schema examples (`queries.example.json`, `claims.example.csv`) |
-| `docs/` | Implementation notes, ASR scoring guide, and web-poison source-selection details |
-| `UPSTREAM.md` | GPT Researcher attribution and local modification inventory |
-
----
+This release excludes datasets, credentials, model resources and experimental outputs. Construction is adapted from the supplied construction source and corrected against the paper; its exact archived equivalence is unverified. PPL filtering is external. See [implementation scope and limitations](docs/PAPER_ALIGNMENT.md); this package is not a complete reproduction of the paper.
 
 ## Setup
 
-**Requirements:** Python 3.11+, LLM/embedding API credentials, optionally a private experiment dataset.
+Launchers target Python 3.12+, Node.js 22+ and Windows. A clean installation and other platforms have not been validated.
 
-```bash
-pip install -r requirements.txt
+```powershell
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements\python.txt
+npm ci
+npx playwright install chromium
+node tools\build_perplexica.cjs
+Copy-Item .env.example .env
+python forge.py check-setup --code-only
 ```
 
-Copy `.env.example` to `.env` and fill in your credentials, or export them directly:
+Supply authorized API credentials in `.env`. Obtain BGE-small-en-v1.5, WebThinker tokenizer and NLTK resources separately at the paths checked by `tools/check_setup.py`. The dependency snapshot is based on the supplied environment, with NumPy adjusted to the paper's 2.3.5. Statistical reproduction uses Python 3.12.14 and NumPy 2.3.5; offline checks here ran on Python 3.12.7/NumPy 1.26.4, so exact archived numerical equivalence remains unverified.
 
-```bash
-export OPENAI_API_KEY=your_api_key_here
-export OPENAI_BASE_URL=https://api.openai.com/v1
-export RETRIEVER=your_retriever_here
+## FORGE document construction
+
+Supply an external JSON object containing only `target_narrative`, `topic_keywords` (a nonempty string list), and `question_direction` (a broad direction). Never supply the full root question or agent-generated subtasks. Set `FORGE_API_KEY` in the process environment and supply the authorized ChatGPT 5.6 Terra API ID and compatible endpoint explicitly.
+
+```powershell
+python forge.py construct --inputs path\to\construction_inputs.json --output runs\construction_q001 --model YOUR_CHATGPT_5_6_TERRA_API_ID --api-base YOUR_AUTHORIZED_V1_ENDPOINT --review-temperature 0 --review-max-tokens 5000
 ```
 
-To reproduce the full batch experiments, point the runners at your dataset:
+The example's review temperature and cap are explicit operator choices; the paper does not specify them. Generation uses temperature 0.2 and a 1,200-token cap. Five sequential core documents carry actual conclusion/qualification/dependency summaries; five objection responses use the completed chain. Keyword titles/prefixes are separate from the 180-220-word body. Every audit checks all 45 pairs and all ten documents, including objection coverage. Up to seven repair rounds refresh dependent drafts, summaries, titles and prefixes. A failing set produces no `frozen.json`.
 
-```bash
-export FORGE_DATASET_ROOT=/path/to/poison-dataset-root   # defaults to data/
-export EXPERIMENT_OUTPUTS_ROOT=/path/to/outputs           # defaults to outputs/
+Accepted output records texts, local-corpus Wikipedia-style titles/URLs, protocol and hashes. These are synthetic inserted records, not authentic Wikipedia pages. The destination must be new; the builder never loads victim outcomes or selects drafts using them. Corpus preparation remains external: assign database IDs and insert the frozen `title`, `url`, `text` records before running victims. Traces contain generated content and remain under ignored `runs/`.
+
+## External frozen corpus
+
+Provide a prepared Wikipedia corpus database and manifest containing `name`, `database`, `documents` (`id`, `url`, `title`, `text`) and `queries` (`query_id`, `query`, `target_claim`, `adoption_rule`). Data preparation must finish before victim runs. For PPL experiments, supply the externally filtered corpus and its metadata; no filtering implementation is included.
+
+```powershell
+python tools\attach_dataset.py --manifest path\to\dataset.json --database runs\corpus\articles.sqlite --output runs\corpus\dataset.json
+python forge.py init --family gemini --model YOUR_GEMINI_3_6_FLASH_API_ID --defense root_query_anchoring --name q001_r1 --dataset runs\corpus\dataset.json --query-id QUERY_ID --framework gpt-researcher
+python forge.py run --name q001_r1 --framework gpt-researcher
 ```
 
----
+Frameworks: `gpt-researcher`, `perplexica`, `webthinker`. Defenses: `none`, `query_paraphrasing`, `knowledge_expansion`, `root_query_anchoring`. Paper defenses use Gemini 3.6 Flash. GPT main conditions use `--family gpt` with the ChatGPT 5.6 Terra API ID and `--defense none`. Initialization freezes the explicit model and protocol. Use separate run names per question/condition/framework/repetition.
 
-## Function 1 — Generate Research Reports
+WebThinker assistant-prefix continuation is disabled until provider support is independently verified. Record that verification at initialization using `--verified-partial-continuation` and `--continuation-strategy partial` (or `vllm_continue`, matching the verified provider). Configuration, source and database hashes are frozen at initialization and checked before execution; rebuild Perplexica before initialization. Do not edit saved configuration after freezing. Unsupported continuations fail rather than silently adding new user instructions. See the alignment note before using that framework for reproduction.
 
-### With the defense wrapper
+## Finalized annotations and checks
 
-```bash
-python -m tools.generate_document "Your query" \
-  --report-source hybrid \
-  --web-poison-dir /path/to/web-poison-docs \
-  --enable-defense
+```powershell
+python forge.py score --annotations path\to\finalized_annotations.json --output runs\scores.json
+python forge.py score --finalized-csv path\to\finalized_scores.csv --score-scale fraction --output runs\archived_scores.json
+python -B -m unittest tools.test_construction tools.test_paper_alignment tools.test_paper_metrics tools.test_completion_adapter
+node tools\test_rqa.cjs
 ```
 
-```bash
-python -m tools.generate_document "Your query" \
-  --report-source hybrid \
-  --web-poison-dir /path/to/web-poison-docs \
-  --disable-defense
-```
+The finalized CSV path preserves supplied scores without reannotation and requires all 100 questions x three repetitions per cohort, including zeros. Its columns are `model,framework,condition,question_id,repetition,E,P,A,T`; explicitly choose `fraction` (0-1) or `percent` (0-100), including T in that scale. It reports trajectory-equal means, 50,000-resample question-cluster percentile intervals and sample SD across the three run means. The annotation path supports independently finalized event labels for new runs; it does not judge evidence or recover missing paper CSVs. T measures complete-report endorsement. The annotation schema and missing experimental pipelines are documented in the alignment note.
 
-`--enable-defense` activates Root Query Anchoring inside the deep-research planner;
-`--disable-defense` turns it off.
+## Licenses and anonymous publication
 
-### Directly via cli.py
-
-```bash
-python cli.py "Your query" \
-  --report_type deep \
-  --report_source web \
-  --tone objective \
-  --enable-defense \
-  --no-pdf \
-  --no-docx
-```
-
-### Batch experiments
-
-```bash
-# Depth-ablation sweep (δ ∈ {1, 2, 3, 4}) — paper Figure 3
-python -m experiments.run_depth
-
-# Network-condition runs (fixed δ = 2, varying j) — paper Figure 2
-python -m experiments.run_network
-```
-
-### Graph integrity check
-
-```bash
-python tools/checkgraph.py outputs/task_xxx_graph.md
-```
-
----
-
-## Function 2 — Compute PRISM / ASR
-
-### Scoring formula
-
-Per-type ASR:
-
-```
-ASR_t = infected_claims_t / total_claims_t
-```
-
-Paper PRISM score (weighted infected claim mass):
-
-```
-PRISM = Σ_t  weight(t) · infected_t  /  Σ_t  weight(t) · total_t
-```
-
-| Claim type | Weight |
-|---|---|
-| factual | 4 |
-| prescriptive | 5 |
-| evaluative | 6 |
-| causal | 7 |
-| framing | 8 |
-
-### Running the scorer
-
-```bash
-# Paper-weighted PRISM score
-python -m tools.score_claim_csv data/claims.example.csv
-
-# Equal-weight diagnostic ASR
-python -m tools.score_claim_csv data/claims.example.csv --weighting equal
-
-# Grouped output per report, CSV format
-python -m tools.score_claim_csv data/claims.example.csv --group-by report_id --format csv
-```
-
-See [`docs/asr_scoring.md`](docs/asr_scoring.md) for the full input schema and interpretation.
-
-### Running the atomic ASR pipeline
-
-The `prism/` module ships the full three-stage LLM pipeline used in the paper:
-
-```bash
-python -m prism.run_pipeline \
-  --experiment-dir /path/to/experiment \
-  --output-dir     /path/to/outputs \
-  --model          gemini-3.1-flash-lite \
-  --base-url       https://generativelanguage.googleapis.com/v1beta/openai \
-  --api-key-env    GOOGLE_API_KEY
-```
-
-See [`prism/README.md`](prism/README.md) for the full pipeline guide, input layout, and output schema.
-
----
-
-## Experimental Settings
-
-The web-poison runs in the paper use:
-
-| Parameter | Value |
-|---|---|
-| `--report_type` | `deep` |
-| `--report_source` | `hybrid` |
-| `--tone` | `objective` |
-| BM25 blend weight (α) | 0.4 |
-| Embedding blend weight (1−α) | 0.6 |
-| Embedding model | `text-embedding-3-small` |
-
-Hybrid runs always pass an explicit empty local-poison directory
-(`outputs/empty_local_poison_docs`) so that local documents do not
-contaminate web-only measurements.
-
----
-
-## Release Boundary
-
-This repository releases the implementation needed to inspect and run the
-released evaluation workflow, including PRISM evaluation, Root Query Anchoring
-(RQA), experiment orchestration, and supporting utilities.
-
-In accordance with the responsible-release policy described in the paper, we
-do not release optimized adversarial document sets, query-specific poisoned
-corpora, automated FORGE document-construction pipelines, or tooling for
-deploying poisoned documents into live retrieval environments.
-
-The `data/` directory contains minimal schema examples only. Full batch
-reproduction of experiments involving the restricted adversarial corpus
-requires access to the withheld private dataset via `FORGE_DATASET_ROOT`.
-
-API credentials, raw model outputs, and evaluator outputs are not included.
-Where possible, we provide aggregate results and configuration files needed
-to inspect the reported evaluation setup.
-
-
+Project code uses `LICENSE`; retained third-party code preserves its license notices listed in [UPSTREAM.md](UPSTREAM.md). The source tree excludes data, generated archives and credentials. Anonymous submission requires an anonymous hosting account and history: deleting files from the current tree does not remove identities from existing Git history or the remote account.

@@ -1,0 +1,5 @@
+{
+  "wiki_bing_endpoint": "http://127.0.0.1:8790/webthinker/bing/search",
+  "wiki_page_endpoint": "http://127.0.0.1:8790/webthinker/page",
+  "preserve_vendor_research_defaults": true
+}

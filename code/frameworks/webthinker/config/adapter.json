@@ -1,0 +1,8 @@
+{
+  "upstream_base": "http://127.0.0.1:8788/webthinker/v1",
+  "continuation_strategy": "partial",
+  "include_reasoning_in_completion": false,
+  "unsupported_sampling_parameters": [],
+  "auxiliary_max_completion_tokens": true,
+  "configuration_note": "Requires a provider honoring assistant partial continuations; unsupported transports must not be used for paper reproduction. Initialization supplies explicit model IDs and 16384-token caps."
+}
