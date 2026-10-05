@@ -42,7 +42,6 @@ filetype==1.2.0
 fonttools==4.64.0
 frozenlist==1.8.0
 fsspec==2026.7.0
-gpt-researcher==0.16.0
 greenlet==3.5.5
 h11==0.16.0
 html5lib==1.1

@@ -1,6 +1,6 @@
 # FORGE
 
-Partial anonymous source release for *From Poisoned Evidence to Research Drift in Deep Research Agents*. Retained code covers three framework adapters, frozen run configuration, QP/KE/RQA defenses and aggregation of externally finalized E/P/A/T annotations.
+Code release for *From Poisoned Evidence to Research Drift in Deep Research Agents*. Included code covers FORGE document construction, three framework adapters, frozen run configuration, QP/KE/RQA defenses and aggregation of externally finalized E/P/A/T annotations.
 
 This release excludes datasets, credentials, model resources and experimental outputs. Construction is adapted from the supplied construction source and corrected against the paper; its exact archived equivalence is unverified. PPL filtering is external. See [implementation scope and limitations](docs/PAPER_ALIGNMENT.md); this package is not a complete reproduction of the paper.
 
@@ -10,7 +10,8 @@ Launchers target Python 3.12+, Node.js 22+ and Windows. A clean installation and
 
 ```powershell
 python -m venv .venv
-.venv\Scripts\python.exe -m pip install -r requirements\python.txt
+.venv\Scripts\Activate.ps1
+python -m pip install -r requirements\python.txt
 npm ci
 npx playwright install chromium
 node tools\build_perplexica.cjs
@@ -18,7 +19,7 @@ Copy-Item .env.example .env
 python forge.py check-setup --code-only
 ```
 
-Supply authorized API credentials in `.env`. Obtain BGE-small-en-v1.5, WebThinker tokenizer and NLTK resources separately at the paths checked by `tools/check_setup.py`. The dependency snapshot is based on the supplied environment, with NumPy adjusted to the paper's 2.3.5. Statistical reproduction uses Python 3.12.14 and NumPy 2.3.5; offline checks here ran on Python 3.12.7/NumPy 1.26.4, so exact archived numerical equivalence remains unverified.
+Supply authorized API credentials in `.env`. Obtain BGE-small-en-v1.5, WebThinker tokenizer and NLTK resources separately at the paths checked by `tools/check_setup.py`. Launchers import the retained framework source under `vendor/`. Statistical analysis targets the paper's Python 3.12.14 and NumPy 2.3.5; validation limits are documented in the alignment note.
 
 ## FORGE document construction
 
@@ -59,4 +60,4 @@ The finalized CSV path preserves supplied scores without reannotation and requir
 
 ## Licenses and anonymous publication
 
-Project code uses `LICENSE`; retained third-party code preserves its license notices listed in [UPSTREAM.md](UPSTREAM.md). The source tree excludes data, generated archives and credentials. Anonymous submission requires an anonymous hosting account and history: deleting files from the current tree does not remove identities from existing Git history or the remote account.
+Project code uses `LICENSE`; retained third-party code preserves its license notices listed in [UPSTREAM.md](UPSTREAM.md). The source tree excludes data, generated archives and credentials. For anonymous review, use a source-content mirror that omits Git history, commit metadata and links back to the hosting account. Preserve third-party licenses and attribution in the mirror.
