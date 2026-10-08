@@ -105,12 +105,27 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if route in ('page','jina'):
                 url=payload.get('url') or params.get('url',[''])[0];a=article(url)
+                if a and is_enabled('llm_judge'):
+                    from llm_document_judge import page_allowed
+                    try:
+                        permitted=page_allowed(a,fw)
+                    except Exception:
+                        log('pages.jsonl',{'id':idx,'framework':fw,'url':url,'status':503,'judge_decision':'ERROR'})
+                        return self.reply('Evidence assessment unavailable.',503,'text/plain; charset=utf-8')
+                    if not permitted:
+                        log('pages.jsonl',{'id':idx,'framework':fw,'url':url,'status':403,'judge_decision':'REJECT'})
+                        return self.reply('Evidence withheld.',403,'text/plain; charset=utf-8')
                 log('pages.jsonl',{'id':idx,'framework':fw,'stage':stage,'started_unix':started,'url':url,'status':200 if a else 404,'article_id':a['id'] if a else None,'title':a['title'] if a else None,'characters':len(a['text']) if a else 0})
                 return self.reply(render(a) if a else '<html><body>Page unavailable in the supplied Wikipedia snapshot.</body></html>',200 if a else 404,'text/html; charset=utf-8')
             if route not in ('tavily/search','searxng/search','bing/search'):return self.reply({'error':'Unknown sandbox route'},404)
             query=payload.get('query') or params.get('q',params.get('query',['']))[0]
             k=int(payload.get('max_results') or params.get('count',[10])[0]);k=max(1,min(k,50))
             result=search(query,k,payload.get('include_domains'),payload.get('exclude_domains'),framework=fw)
+            if is_enabled('llm_judge'):
+                from llm_document_judge import filter_documents
+                result['results'],result['judge_filter']=filter_documents(
+                    result['results'],query,fw,
+                    full_content=bool(route=='tavily/search' and payload.get('include_raw_content')))
             audit={k:v for k,v in result.items() if k!='results'}
             audit.update(id=idx,framework=fw,stage=stage,started_unix=started,provider=route,request={k:v for k,v in payload.items() if k not in ('api_key',)},results=[{k:v for k,v in r.items() if k!='text'} for r in result['results']])
             log('searches.jsonl',audit)

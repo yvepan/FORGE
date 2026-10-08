@@ -17,6 +17,7 @@ MODES = {
     "query_paraphrasing",
     "knowledge_expansion",
     "root_query_anchoring",
+    "llm_judge",
 }
 MODE = os.environ.get("FORGE_DEFENSE_MODE", "none").strip().lower()
 if MODE not in MODES:

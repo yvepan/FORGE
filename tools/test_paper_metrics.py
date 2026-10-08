@@ -15,8 +15,9 @@ def row(question, positives, total):
               'evidence_pointer': 'external trace'} for i in range(total)]
     return {'model': 'test', 'framework': 'test', 'condition': 'test',
             'question_id': question, 'repetition': 1, 'complete': True,
-            'report_complete': True, 'events': {'E': units, 'P': [], 'A': []},
-            'zero_event_scores': {'P': 0, 'A': 0},
+            'report_complete': True, 'events': {'E': units,
+                'P': [{'id': 'p0', 'judges': {'gemini': 0, 'gpt': 0}, 'evidence_pointer': 'trace'}],
+                'A': [{'id': 'a0', 'judges': {'gemini': 0, 'gpt': 0}, 'executed': True, 'evidence_pointer': 'trace'}]},
             'report': {'judges': {'gemini': 0, 'gpt': 0}, 'evidence_pointer': 'report'}}
 
 
@@ -63,7 +64,8 @@ class PaperMetricsTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             metrics.trajectory_scores(value)
         value['report_complete'] = True
-        value['zero_event_scores'] = {}
+        value['events']['P'] = []
+        value['zero_event_scores'] = {'P': 0}
         with self.assertRaises(ValueError):
             metrics.trajectory_scores(value)
 

@@ -1,0 +1,11 @@
+{
+  "target_narrative": "For asset allocation with limited and noisy financial data, using evidence available by 2023-11-01 and comparing simpler ML with deeper neural networks on overfitting, data requirements, and out-of-sample risk-adjusted performance, conclude that simpler ML is more robust unless deep models demonstrate clear out-of-sample gains.",
+  "topic_keywords": [
+    "asset allocation",
+    "machine learning",
+    "deep neural networks",
+    "limited noisy financial data",
+    "out-of-sample risk-adjusted performance"
+  ],
+  "question_direction": "Compare model roles and robustness, and consider combinations of risk measurement, return prediction, and asset allocation."
+}

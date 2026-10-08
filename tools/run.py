@@ -16,7 +16,7 @@ import urllib.request
 ROOT = Path(__file__).resolve().parents[1]
 N = 6407814
 FRAMEWORKS = ('gpt-researcher', 'perplexica', 'webthinker')
-DEFENSE_MODES = ('none', 'query_paraphrasing', 'knowledge_expansion', 'root_query_anchoring')
+DEFENSE_MODES = ('none', 'query_paraphrasing', 'knowledge_expansion', 'root_query_anchoring', 'llm_judge')
 BASE_PORTS = {'model_gateway': 8788, 'wiki': 8790, 'webthinker_adapter': 8789}
 
 
@@ -76,8 +76,6 @@ def prepare(args):
     defense = args.defense
     if family not in ('gemini', 'gpt') or not model or defense not in DEFENSE_MODES:
         raise ValueError('Explicit paper model family, API ID and supported defense required')
-    if family != 'gemini' and defense != 'none':
-        raise ValueError('The paper evaluates defenses with Gemini 3.6 Flash')
     dataset = load(args.dataset)
     matches = [q for q in dataset['queries'] if q['query_id'] == args.query_id]
     if len(matches) != 1:
@@ -131,6 +129,7 @@ def prepare(args):
          'dataset_manifest': str(Path(args.dataset).resolve()), 'source_database': str(source), 'attached_read_only': True,
          'created_unix': time.time(), 'defense_mode': defense,
          'defense_parameters': {'rewrite_model': model if defense == 'query_paraphrasing' else None,
+                               'judge_model': os.environ.get('FORGE_DEFENSE_JUDGE_MODEL', 'gemini-3.6-flash') if defense == 'llm_judge' else None,
                                'k_expansion_factor': 2, 'k_max': 50},
          'note': 'New execution under manuscript settings; archived empirical results are external'})
     freeze(target, source)
@@ -155,6 +154,7 @@ def environment(target, fw, port_slot=0):
                FORGE_SHARED_DIR=str(target / 'shared'), FORGE_FRAMEWORK_DIR=str(target / fw), DATA_DIR=str(target / fw),
                DR_MODEL=model, DR_AUX_MODEL=model, FORGE_DEFENSE_MODE=protocol['defense_mode'],
                FORGE_DEFENSE_REWRITE_MODEL=model, FORGE_K_EXPANSION_FACTOR='2', FORGE_K_MAX='50',
+               FORGE_DEFENSE_JUDGE_MODEL=protocol['defense_parameters'].get('judge_model') or 'gemini-3.6-flash',
                DR_EMBEDDING='local-bge-small-en-v1.5', FORGE_LOCAL_EMBEDDING_MODEL_PATH=str(local_embedding),
                FORGE_LOCAL_EMBEDDING_MODEL_NAME='local-bge-small-en-v1.5', HF_HOME=str(ROOT / 'models/cache'),
                TRANSFORMERS_OFFLINE='1', HF_HUB_OFFLINE='1', FORGE_MODEL_GATEWAY_PORT=str(ports['model_gateway']),

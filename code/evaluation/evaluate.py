@@ -66,11 +66,7 @@ def trajectory_scores(row):
         if unique:
             scores[stage] = sum(labels[stage].values()) / len(unique)
         else:
-            # m=0 is undefined in Eq. 2. Require an explicit finalized-zero convention.
-            zero = row.get('zero_event_scores', {}).get(stage)
-            if type(zero) is not int or zero != 0:
-                raise ValueError('Empty stage needs an explicit finalized zero-event score')
-            scores[stage] = 0.0
+            raise ValueError('Every scored stage must contain at least one event')
     if not nonempty_text(row['report'].get('evidence_pointer')):
         raise ValueError('T needs the complete report location')
     scores['T'] = adjudicated(row['report'])
@@ -142,7 +138,7 @@ def finalized_csv(path, scale):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     source = parser.add_mutually_exclusive_group(required=True)
-    source.add_argument('--annotations', type=Path, help='Finalized event annotations; format in docs/PAPER_ALIGNMENT.md')
+    source.add_argument('--annotations', type=Path, help='Finalized E/P/A/T event annotations')
     source.add_argument('--finalized-csv', type=Path, help='Archived numeric scores; retain without reannotation')
     parser.add_argument('--score-scale', choices=('fraction', 'percent'), help='Required for finalized CSV')
     parser.add_argument('--output', type=Path, required=True)

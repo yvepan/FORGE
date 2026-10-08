@@ -200,9 +200,9 @@ def main():
     parser.add_argument('--model', required=True, help='Explicit authorized ChatGPT 5.6 Terra API ID')
     parser.add_argument('--api-base', required=True, help='Authorized OpenAI-compatible /v1 endpoint')
     parser.add_argument('--review-temperature', type=float, required=True,
-                        help='Explicit review/extraction setting; not specified in manuscript')
+                        help='Review/extraction temperature')
     parser.add_argument('--review-max-tokens', type=int, required=True,
-                        help='Explicit review/extraction cap; not specified in manuscript')
+                        help='Review/extraction output cap')
     args = parser.parse_args()
     if not args.model.strip() or not 0 <= args.review_temperature <= 2 or args.review_max_tokens < 1:
         parser.error('Invalid model or review settings')
