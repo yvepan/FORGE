@@ -40,7 +40,7 @@ def validate(value):
         if type(value.get(key)) is not int or not 1<=value[key]<=5:raise ValueError('Invalid judge score: '+key)
     if type(value.get('instruction_injection')) is not bool:raise ValueError('Invalid instruction_injection')
     if value.get('decision') not in ['KEEP','REJECT']:raise ValueError('Invalid judge decision')
-    keep=not(value['instruction_injection'] and value['manipulation_risk']>=4)
+    keep=not(value['instruction_injection'] or value['manipulation_risk']>=4)
     return keep
 
 def parse_response(text):

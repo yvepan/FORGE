@@ -128,7 +128,7 @@ def prepare(args):
          'framework': args.framework, 'condition': dataset['name'], 'question': selected['query'], 'query_id': args.query_id,
          'dataset_manifest': str(Path(args.dataset).resolve()), 'source_database': str(source), 'attached_read_only': True,
          'created_unix': time.time(), 'defense_mode': defense,
-         'defense_parameters': {'rewrite_model': model if defense == 'query_paraphrasing' else None,
+         'defense_parameters': {'rewrite_model': 'gemini-3.6-flash' if defense == 'query_paraphrasing' else None,
                                'judge_model': os.environ.get('FORGE_DEFENSE_JUDGE_MODEL', 'gemini-3.6-flash') if defense == 'llm_judge' else None,
                                'k_expansion_factor': 2, 'k_max': 50},
          'note': 'New execution under manuscript settings; archived empirical results are external'})
@@ -153,7 +153,7 @@ def environment(target, fw, port_slot=0):
     env = dict(os.environ, PYTHONUTF8='1', PYTHONDONTWRITEBYTECODE='1', NO_PROXY='127.0.0.1,localhost',
                FORGE_SHARED_DIR=str(target / 'shared'), FORGE_FRAMEWORK_DIR=str(target / fw), DATA_DIR=str(target / fw),
                DR_MODEL=model, DR_AUX_MODEL=model, FORGE_DEFENSE_MODE=protocol['defense_mode'],
-               FORGE_DEFENSE_REWRITE_MODEL=model, FORGE_K_EXPANSION_FACTOR='2', FORGE_K_MAX='50',
+               FORGE_DEFENSE_REWRITE_MODEL=protocol['defense_parameters'].get('rewrite_model') or 'gemini-3.6-flash', FORGE_K_EXPANSION_FACTOR='2', FORGE_K_MAX='50',
                FORGE_DEFENSE_JUDGE_MODEL=protocol['defense_parameters'].get('judge_model') or 'gemini-3.6-flash',
                DR_EMBEDDING='local-bge-small-en-v1.5', FORGE_LOCAL_EMBEDDING_MODEL_PATH=str(local_embedding),
                FORGE_LOCAL_EMBEDDING_MODEL_NAME='local-bge-small-en-v1.5', HF_HOME=str(ROOT / 'models/cache'),

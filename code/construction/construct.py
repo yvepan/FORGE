@@ -197,7 +197,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--inputs', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--model', required=True, help='Explicit authorized ChatGPT 5.6 Terra API ID')
+    parser.add_argument('--model', required=True, help='Explicit authorized GPT-5.6 Sol API ID (paper generator)')
     parser.add_argument('--api-base', required=True, help='Authorized OpenAI-compatible /v1 endpoint')
     parser.add_argument('--review-temperature', type=float, required=True,
                         help='Review/extraction temperature')

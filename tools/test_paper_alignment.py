@@ -14,6 +14,24 @@ from tools import run
 
 
 class ProfileTests(unittest.TestCase):
+    def test_qp_uses_frozen_gemini_helper_with_gpt_victim(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / 'runs/test'
+            target.mkdir(parents=True)
+            (root / 'models/bge-small-en-v1.5').mkdir(parents=True)
+            (root / 'models/bge-small-en-v1.5/config.json').write_text('{}')
+            (target / 'protocol.json').write_text(json.dumps({
+                'framework': 'gpt-researcher', 'victim_model': 'gpt-victim',
+                'auxiliary_model': 'gpt-victim', 'defense_mode': 'query_paraphrasing',
+                'defense_parameters': {'rewrite_model': 'gemini-3.6-flash'}}))
+            with patch.object(run, 'ROOT', root), patch.dict(os.environ,
+                    FORGE_DEFENSE_REWRITE_MODEL='incorrect-override'):
+                env = run.environment(target, 'gpt-researcher')
+            self.assertEqual(env['DR_MODEL'], 'gpt-victim')
+            self.assertEqual(env['DR_AUX_MODEL'], 'gpt-victim')
+            self.assertEqual(env['FORGE_DEFENSE_REWRITE_MODEL'], 'gemini-3.6-flash')
+
     def test_model_and_webthinker_caps_frozen_at_init(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

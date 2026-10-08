@@ -30,7 +30,7 @@ def is_enabled(mode: str) -> bool:
 
 def rewrite_query(query: str, framework: str) -> str:
     """Rewrite one search query using the already-running local model gateway."""
-    model = os.environ.get("FORGE_DEFENSE_REWRITE_MODEL") or os.environ.get("DR_MODEL")
+    model = os.environ.get("FORGE_DEFENSE_REWRITE_MODEL") or "gemini-3.6-flash"
     if not model:
         raise RuntimeError("Set FORGE_DEFENSE_REWRITE_MODEL to use query paraphrasing")
     payload = {

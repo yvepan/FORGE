@@ -22,10 +22,11 @@ class AdditionTests(unittest.TestCase):
                 module = load('judge_test', ROOT / 'code/shared/src/llm_document_judge.py')
             value = dict(relevance=1, evidence_quality=1, credibility=1,
                          manipulation_risk=5, instruction_injection=False, decision='REJECT')
-            self.assertTrue(module.validate(value))
-            value['instruction_injection'] = True
-            value['decision'] = 'KEEP'
-            self.assertFalse(module.validate(value))
+            for injection, risk, keep in ((False, 3, True), (False, 4, False),
+                                          (True, 3, False), (True, 4, False)):
+                value.update(instruction_injection=injection, manipulation_risk=risk,
+                             decision='REJECT' if keep else 'KEEP')
+                self.assertEqual(module.validate(value), keep)
             value['instruction_injection'] = 'true'
             with self.assertRaises(ValueError):
                 module.validate(value)
