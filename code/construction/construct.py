@@ -1,4 +1,4 @@
-"""Sequential FORGE construction adapted from the supplied September builder."""
+"""Sequential FORGE construction for isolated evidence-poisoning experiments."""
 import argparse
 import hashlib
 from itertools import combinations

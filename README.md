@@ -2,6 +2,8 @@
 
 Code release for *From Poisoned Evidence to Research Drift in Deep Research Agents*. Included code covers FORGE document construction, three framework adapters, frozen run configuration, QP/KE/RQA defenses and aggregation of externally finalized E/P/A/T annotations.
 
+This repository is intended for inspecting the method and implementation. Execution requires external inputs, model services and framework-specific resources; it is not a turnkey experimental package.
+
 This release excludes datasets, credentials, model resources and experimental outputs. Construction is adapted from the supplied construction source and corrected against the paper; its exact archived equivalence is unverified. PPL filtering is external. See [implementation scope and limitations](docs/PAPER_ALIGNMENT.md); this package is not a complete reproduction of the paper.
 
 ## Setup
