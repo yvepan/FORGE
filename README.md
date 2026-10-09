@@ -2,7 +2,7 @@
 
 Research code for *From Poisoned Evidence to Research Drift in Deep Research Agents*.
 
-Includes document construction, three framework adapters, QP/KE/RQA/LLM-judge defenses, a minimal PoisonedRAG adaptation, and E/P/A/T evaluation utilities. Datasets, model resources, credentials and experimental outputs are supplied externally.
+Includes document construction, three framework adapters, QP/PPL/KE/RQA/LLM-judge defenses, a minimal PoisonedRAG adaptation, and E/P/A/T evaluation utilities. Datasets, model resources, credentials and experimental outputs are supplied externally.
 
 ## Setup
 
@@ -32,7 +32,7 @@ python forge.py score --help
 
 Frameworks: `gpt-researcher`, `perplexica`, `webthinker`.
 
-Defenses: `none`, `query_paraphrasing`, `knowledge_expansion`, `root_query_anchoring`, `llm_judge`.
+Defenses: `none`, `query_paraphrasing`, `ppl_filter`, `knowledge_expansion`, `root_query_anchoring`, `llm_judge`.
 
 Runs use external frozen corpus manifests. Construction accepts only `target_narrative`, `topic_keywords` and `question_direction`. PoisonedRAG exposes external generation and review callbacks under `code/baselines/`.
 

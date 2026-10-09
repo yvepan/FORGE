@@ -6,7 +6,8 @@ import sys
 ROOT = Path(__file__).resolve().parent
 ENTRYPOINTS = {'init': 'tools/run.py', 'run': 'tools/run.py',
               'construct': 'code/construction/construct.py',
-              'score': 'code/evaluation/evaluate.py', 'check-setup': 'tools/check_setup.py'}
+              'score': 'code/evaluation/evaluate.py', 'check-setup': 'tools/check_setup.py',
+              'ppl-filter': 'code/shared/src/ppl_filter.py'}
 
 
 def main():

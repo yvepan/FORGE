@@ -16,7 +16,7 @@ import urllib.request
 ROOT = Path(__file__).resolve().parents[1]
 N = 6407814
 FRAMEWORKS = ('gpt-researcher', 'perplexica', 'webthinker')
-DEFENSE_MODES = ('none', 'query_paraphrasing', 'knowledge_expansion', 'root_query_anchoring', 'llm_judge')
+DEFENSE_MODES = ('none', 'query_paraphrasing', 'knowledge_expansion', 'root_query_anchoring', 'llm_judge', 'ppl_filter')
 BASE_PORTS = {'model_gateway': 8788, 'wiki': 8790, 'webthinker_adapter': 8789}
 
 
@@ -77,6 +77,9 @@ def prepare(args):
     if family not in ('gemini', 'gpt') or not model or defense not in DEFENSE_MODES:
         raise ValueError('Explicit paper model family, API ID and supported defense required')
     dataset = load(args.dataset)
+    if defense == 'ppl_filter' and not (dataset.get('ppl_filter', {}).get('model') == 'gpt2'
+                                       and dataset['ppl_filter'].get('threshold') == 111.71):
+        raise ValueError('PPL defense requires a corpus prefiltered with GPT-2 at 111.71')
     matches = [q for q in dataset['queries'] if q['query_id'] == args.query_id]
     if len(matches) != 1:
         raise ValueError('Query ID must identify exactly one frozen question')

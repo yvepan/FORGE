@@ -18,6 +18,7 @@ MODES = {
     "knowledge_expansion",
     "root_query_anchoring",
     "llm_judge",
+    "ppl_filter",  # Corpus filtered offline before this sandbox starts.
 }
 MODE = os.environ.get("FORGE_DEFENSE_MODE", "none").strip().lower()
 if MODE not in MODES:
